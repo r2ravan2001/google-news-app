@@ -1,0 +1,5 @@
+flask
+feedparser
+flask-cors
+aiohttp
+gunicorn
