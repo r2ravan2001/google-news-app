@@ -34,39 +34,49 @@
     <div id="resultsContainer">Loading news...</div>
   </div>
 
-  <script>
-    async function loadNews() {
-      const topic = document.getElementById('topicInput').value || 'latest';
-      const hours = document.getElementById('timeframeSelect').value;
-      const container = document.getElementById('resultsContainer');
-      container.innerHTML = 'Fetching news...';
+ <script>
+  async function loadNews() {
+    const topic = document.getElementById('topicInput').value || 'latest';
+    const hours = document.getElementById('timeframeSelect').value;
+    const container = document.getElementById('resultsContainer');
+    container.innerHTML = 'Fetching news...';
 
-      try {
-        const res = await fetch('[https://pratahkal-newsroom-portal.onrender.com/get-news](https://pratahkal-newsroom-portal.onrender.com/get-news)');
-        const data = await res.json();
+    try {
+      // Clean URL pointing directly to your Render backend
+      const res = await fetch(`https://pratahkal-newsroom-portal.onrender.com/get-news?topic=${encodeURIComponent(topic)}&hours=${hours}`);
+      
+      // ALTERNATIVE (Relative path - recommended if HTML is served by Flask):
+      // const res = await fetch(`/get-news?topic=${encodeURIComponent(topic)}&hours=${hours}`);
 
-        if (data.articles.length === 0) {
-          container.innerHTML = '<p>No news found for this topic within the chosen timeframe.</p>';
-          return;
-        }
-
-        container.innerHTML = '';
-        data.articles.forEach(article => {
-          const card = document.createElement('div');
-          card.className = 'news-card';
-          card.innerHTML = `
-            <a class="news-title" href="${article.link}" target="_blank">${article.title}</a>
-            <div class="news-meta">
-              <span class="badge">${article.source}</span> • Published: ${article.published}
-            </div>
-          `;
-          container.appendChild(card);
-        });
-      } catch (err) {
-        container.innerHTML = '<p style="color:red;">Error connecting to API server. Make sure app.py is running.</p>';
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
+
+      const data = await res.json();
+
+      if (!data.articles || data.articles.length === 0) {
+        container.innerHTML = '<p>No news found for this topic within the chosen timeframe.</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+      data.articles.forEach(article => {
+        const card = document.createElement('div');
+        card.className = 'news-card';
+        card.innerHTML = `
+          <a class="news-title" href="${article.link}" target="_blank">${article.title}</a>
+          <div class="news-meta">
+            <span class="badge">${article.source}</span> • Published: ${article.published}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = '<p style="color:red;">Error connecting to API server. Make sure app.py is running.</p>';
     }
-    loadNews();
-  </script>
+  }
+  loadNews();
+</script>
 </body>
 </html>
