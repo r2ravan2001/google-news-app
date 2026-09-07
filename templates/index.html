@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recent Google News</title>
+  <title>Pratahkal Newsroom Portal</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
     .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     h1 { color: #1a73e8; margin-top: 0; }
-    .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+    .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     input, select, button { padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
-    input { flex: 1; }
+    input { flex: 1; min-width: 200px; }
     button { background: #1a73e8; color: white; border: none; cursor: pointer; }
     button:hover { background: #1557b0; }
     .news-card { padding: 12px 0; border-bottom: 1px solid #eee; }
@@ -22,57 +22,62 @@
 </head>
 <body>
   <div class="container">
-    <h1>Latest News (Past 2–4 Hours)</h1>
+    <h1>Pratahkal Newsroom Portal</h1>
     <div class="controls">
       <input type="text" id="topicInput" placeholder="Enter topic (e.g., Technology, Cricket)...">
       <select id="timeframeSelect">
-        <option value="2h">Last 2 Hours</option>
-        <option value="4h" selected>Last 4 Hours</option>
+        <option value="2h" selected>Last 2 Hours</option>
+        <option value="4h">Last 4 Hours</option>
+        <option value="8h">Last 8 Hours</option>
+        <option value="12h">Last 12 Hours</option>
+        <option value="24h">Last 24 Hours</option>
       </select>
       <button onclick="loadNews()">Fetch News</button>
     </div>
-    <div id="resultsContainer">Loading news...</div>
+    <div id="resultsContainer">Loading initial news...</div>
   </div>
 
- <script>
-  async function loadNews() {
-  const topic = document.getElementById('topicInput').value || 'latest';
-  const hours = document.getElementById('timeframeSelect').value;
-  const container = document.getElementById('resultsContainer');
-  container.innerHTML = 'Fetching news...';
+  <script>
+    async function loadNews() {
+      const topic = document.getElementById('topicInput').value || 'latest';
+      const hours = document.getElementById('timeframeSelect').value;
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = 'Fetching news...';
 
-  try {
-    // Relative path connects automatically to your backend on Render
-    const res = await fetch(`/get-news?topic=${encodeURIComponent(topic)}&hours=${hours}`);
+      try {
+        const res = await fetch(`/get-news?topic=${encodeURIComponent(topic)}&hours=${hours}`);
 
-    if (!res.ok) {
-      throw new Error(`Server returned status: ${res.status}`);
+        if (!res.ok) {
+          throw new Error(`Server returned status: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        if (!data.articles || data.articles.length === 0) {
+          container.innerHTML = '<p>No fresh news found for this topic within the chosen timeframe.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        data.articles.forEach(article => {
+          const card = document.createElement('div');
+          card.className = 'news-card';
+          card.innerHTML = `
+            <a class="news-title" href="${article.link}" target="_blank">${article.title}</a>
+            <div class="news-meta">
+              <span class="badge">${article.source}</span> • Published: ${article.published}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<p style="color:red;">Error connecting to API server (${err.message}).</p>`;
+      }
     }
 
-    const data = await res.json();
-
-    if (!data.articles || data.articles.length === 0) {
-      container.innerHTML = '<p>No news found for this topic.</p>';
-      return;
-    }
-
-    container.innerHTML = '';
-    data.articles.forEach(article => {
-      const card = document.createElement('div');
-      card.className = 'news-card';
-      card.innerHTML = `
-        <a class="news-title" href="${article.link}" target="_blank">${article.title}</a>
-        <div class="news-meta">
-          <span class="badge">${article.source}</span> • Published: ${article.published}
-        </div>
-      `;
-      container.appendChild(card);
-    });
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = `<p style="color:red;">Error connecting to API server (${err.message}).</p>`;
-  }
-}
-</script>
+    // Initial load on page open
+    loadNews();
+  </script>
 </body>
 </html>
