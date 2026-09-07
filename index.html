@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recent Google News</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
+    .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { color: #1a73e8; margin-top: 0; }
+    .controls { display: flex; gap: 10px; margin-bottom: 20px; }
+    input, select, button { padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
+    input { flex: 1; }
+    button { background: #1a73e8; color: white; border: none; cursor: pointer; }
+    button:hover { background: #1557b0; }
+    .news-card { padding: 12px 0; border-bottom: 1px solid #eee; }
+    .news-title { font-size: 16px; font-weight: bold; color: #1a0dab; text-decoration: none; display: block; }
+    .news-title:hover { text-decoration: underline; }
+    .news-meta { font-size: 12px; color: #5f6368; margin-top: 4px; }
+    .badge { background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Latest News (Past 2–4 Hours)</h1>
+    <div class="controls">
+      <input type="text" id="topicInput" placeholder="Enter topic (e.g., Technology, Cricket)...">
+      <select id="timeframeSelect">
+        <option value="2h">Last 2 Hours</option>
+        <option value="4h" selected>Last 4 Hours</option>
+      </select>
+      <button onclick="loadNews()">Fetch News</button>
+    </div>
+    <div id="resultsContainer">Loading news...</div>
+  </div>
+
+  <script>
+    async function loadNews() {
+      const topic = document.getElementById('topicInput').value || 'latest';
+      const hours = document.getElementById('timeframeSelect').value;
+      const container = document.getElementById('resultsContainer');
+      container.innerHTML = 'Fetching news...';
+
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/news?q=${encodeURIComponent(topic)}&hours=${hours}`);
+        const data = await res.json();
+
+        if (data.articles.length === 0) {
+          container.innerHTML = '<p>No news found for this topic within the chosen timeframe.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        data.articles.forEach(article => {
+          const card = document.createElement('div');
+          card.className = 'news-card';
+          card.innerHTML = `
+            <a class="news-title" href="${article.link}" target="_blank">${article.title}</a>
+            <div class="news-meta">
+              <span class="badge">${article.source}</span> • Published: ${article.published}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        container.innerHTML = '<p style="color:red;">Error connecting to API server. Make sure app.py is running.</p>';
+      }
+    }
+    loadNews();
+  </script>
+</body>
+</html>
