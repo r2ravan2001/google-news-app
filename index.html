@@ -42,7 +42,7 @@
       container.innerHTML = 'Fetching news...';
 
       try {
-        const res = await fetch(`http://127.0.0.1:5000/api/news?q=${encodeURIComponent(topic)}&hours=${hours}`);
+        const res = await fetch('[https://pratahkal-newsroom-portal.onrender.com/get-news](https://pratahkal-newsroom-portal.onrender.com/get-news)');
         const data = await res.json();
 
         if (data.articles.length === 0) {
