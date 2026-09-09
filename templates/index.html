@@ -6,43 +6,44 @@
   <title>Pratahkal Newsroom Portal</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
-    .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     h1 { color: #1a73e8; margin-top: 0; }
     .controls { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
     input, select, button { padding: 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 4px; }
-    input { flex: 1; min-width: 200px; }
+    input { flex: 1; min-width: 220px; }
     button { background: #1a73e8; color: white; border: none; cursor: pointer; }
     button:hover { background: #1557b0; }
     .news-card { padding: 12px 0; border-bottom: 1px solid #eee; }
     .news-title { font-size: 16px; font-weight: bold; color: #1a0dab; text-decoration: none; display: block; }
     .news-title:hover { text-decoration: underline; }
-    .news-meta { font-size: 12px; color: #5f6368; margin-top: 4px; }
-    .badge { background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 4px; }
+    .news-meta { font-size: 12px; color: #5f6368; margin-top: 6px; display: flex; gap: 8px; align-items: center; }
+    .badge { background: #e8f0fe; color: #1a73e8; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .badge-lang { background: #e6f4ea; color: #137333; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Pratahkal Newsroom Portal</h1>
+    <h1>Pratahkal Multi-Language Newsroom Portal</h1>
     <div class="controls">
-      <input type="text" id="topicInput" placeholder="Enter topic (e.g., Technology, Cricket)...">
+      <input type="text" id="topicInput" placeholder="Enter keyword (or leave blank for Trending News)...">
       <select id="timeframeSelect">
-        <option value="2h" selected>Last 2 Hours</option>
-        <option value="4h">Last 4 Hours</option>
+        <option value="2h">Last 2 Hours</option>
+        <option value="4h" selected>Last 4 Hours</option>
         <option value="8h">Last 8 Hours</option>
         <option value="12h">Last 12 Hours</option>
         <option value="24h">Last 24 Hours</option>
       </select>
       <button onclick="loadNews()">Fetch News</button>
     </div>
-    <div id="resultsContainer">Loading initial news...</div>
+    <div id="resultsContainer">Loading trending news...</div>
   </div>
 
   <script>
     async function loadNews() {
-      const topic = document.getElementById('topicInput').value || 'latest';
+      const topic = document.getElementById('topicInput').value.trim();
       const hours = document.getElementById('timeframeSelect').value;
       const container = document.getElementById('resultsContainer');
-      container.innerHTML = 'Fetching news...';
+      container.innerHTML = 'Fetching multi-language news feeds...';
 
       try {
         const res = await fetch(`/get-news?topic=${encodeURIComponent(topic)}&hours=${hours}`);
@@ -54,7 +55,7 @@
         const data = await res.json();
 
         if (!data.articles || data.articles.length === 0) {
-          container.innerHTML = '<p>No fresh news found for this topic within the chosen timeframe.</p>';
+          container.innerHTML = '<p>No news found for this topic.</p>';
           return;
         }
 
@@ -65,7 +66,9 @@
           card.innerHTML = `
             <a class="news-title" href="${article.link}" target="_blank">${article.title}</a>
             <div class="news-meta">
-              <span class="badge">${article.source}</span> • Published: ${article.published}
+              <span class="badge-lang">${article.lang}</span>
+              <span class="badge">${article.source}</span>
+              <span>Published: ${article.published}</span>
             </div>
           `;
           container.appendChild(card);
@@ -76,7 +79,7 @@
       }
     }
 
-    // Initial load on page open
+    // Load trending news when portal opens
     loadNews();
   </script>
 </body>
