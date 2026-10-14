@@ -56,7 +56,6 @@ def fetch_single_feed(lang_info, topic, timeframe, force_fallback=False):
         for entry in feed.entries:
             pub_date = getattr(entry, 'published', '')
             
-            # Apply strict minute filter if active
             if minute_limit and not is_within_minutes(pub_date, minute_limit):
                 continue
 
@@ -87,7 +86,7 @@ def get_news():
         if timeframe not in valid_timeframes:
             timeframe = '4h'
 
-        # Fetch feeds across Hindi, Marathi, English
+        # Parallel fetch across languages
         all_articles = []
         with ThreadPoolExecutor(max_workers=3) as executor:
             futures = [
@@ -97,7 +96,7 @@ def get_news():
             for future in futures:
                 all_articles.extend(future.result())
 
-        # Fallback: If 0 articles found for 2m/5m/10m, fetch standard recent news
+        # Fallback if 0 articles found for exact minute window
         is_fallback = False
         if len(all_articles) == 0 and timeframe in ['2m', '5m', '10m']:
             is_fallback = True
