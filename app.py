@@ -30,15 +30,17 @@ def is_within_minutes(pub_date_str, max_minutes):
     except Exception:
         return True
 
-def fetch_single_feed(lang_info, topic, timeframe):
+def fetch_single_feed(lang_info, topic, timeframe, force_fallback=False):
     try:
         is_trending = not topic or topic.strip().lower() in ['latest', 'trending', '']
         
-        # Determine minute limits
         minute_limit = None
         rss_timeframe = timeframe
-        if timeframe in ['2m', '5m', '10m']:
+        
+        if timeframe in ['2m', '5m', '10m'] and not force_fallback:
             minute_limit = int(timeframe.replace('m', ''))
+            rss_timeframe = '1h'
+        elif timeframe in ['2m', '5m', '10m'] and force_fallback:
             rss_timeframe = '1h'
 
         if is_trending:
@@ -54,6 +56,7 @@ def fetch_single_feed(lang_info, topic, timeframe):
         for entry in feed.entries:
             pub_date = getattr(entry, 'published', '')
             
+            # Apply strict minute filter if active
             if minute_limit and not is_within_minutes(pub_date, minute_limit):
                 continue
 
@@ -84,17 +87,29 @@ def get_news():
         if timeframe not in valid_timeframes:
             timeframe = '4h'
 
-        # Fetch Hindi, Marathi, and English feeds in parallel threads safely
+        # Fetch feeds across Hindi, Marathi, English
         all_articles = []
         with ThreadPoolExecutor(max_workers=3) as executor:
             futures = [
-                executor.submit(fetch_single_feed, lang, topic, timeframe) 
+                executor.submit(fetch_single_feed, lang, topic, timeframe, False) 
                 for lang in LANGUAGES
             ]
             for future in futures:
                 all_articles.extend(future.result())
 
-        return jsonify({'articles': all_articles, 'count': len(all_articles)})
+        # Fallback: If 0 articles found for 2m/5m/10m, fetch standard recent news
+        is_fallback = False
+        if len(all_articles) == 0 and timeframe in ['2m', '5m', '10m']:
+            is_fallback = True
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = [
+                    executor.submit(fetch_single_feed, lang, topic, timeframe, True) 
+                    for lang in LANGUAGES
+                ]
+                for future in futures:
+                    all_articles.extend(future.result())
+
+        return jsonify({'articles': all_articles, 'count': len(all_articles), 'fallback': is_fallback})
     except Exception as e:
         print(f"Error in get_news: {e}")
         return jsonify({'error': str(e), 'articles': []}), 500
