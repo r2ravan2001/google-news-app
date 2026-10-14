@@ -3,3 +3,4 @@ feedparser
 flask-cors
 aiohttp
 gunicorn
+python-dateutil
