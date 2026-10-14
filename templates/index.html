@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pratahkal Newsroom Portal</title>
+  <title>Pratahkal Multi-Language Newsroom Portal</title>
   <style>
     body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
     .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
@@ -63,6 +63,14 @@
         }
 
         container.innerHTML = '';
+
+        if (data.fallback) {
+          const notice = document.createElement('div');
+          notice.style.cssText = 'background: #fff3cd; color: #856404; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 13px; border: 1px solid #ffeeba;';
+          notice.innerHTML = `⚠️ No new stories published in the exact last <strong>${hours.replace('m', ' minutes')}</strong>. Showing most recent updates instead:`;
+          container.appendChild(notice);
+        }
+
         data.articles.forEach(article => {
           const card = document.createElement('div');
           card.className = 'news-card';
